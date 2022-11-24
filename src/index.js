@@ -53,9 +53,7 @@ async function onClickSubmit(event) {
     if (data.totalHits <= pixabay.per_page) {
       galleryEl.innerHTML = templates(data.hits);
 
-      Notiflix.Notify.success(
-        `Смотрите какая красота! Вот ваши ${data.hits.length} картинок.`
-      );
+      Notiflix.Notify.success(`Hooray! We found ${data.hits.length} images.`);
       lightbox.refresh();
       return;
     }
@@ -63,7 +61,7 @@ async function onClickSubmit(event) {
     galleryEl.innerHTML = templates(data.hits);
     btnLoadMoreEl.classList.remove('is-hidden');
 
-    Notiflix.Notify.success(`Уху, мы нашли ${data.totalHits} картинок! `);
+    Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
 
     lightbox.refresh();
   } catch (error) {
@@ -80,16 +78,16 @@ async function onClickLoadMore(event) {
       galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
       btnLoadMoreEl.classList.add('is-hidden');
 
-      Notiflix.Notify.info(`Это последние ${data.hits.length} картинок :<`);
-
+      Notiflix.Notify.info(
+        `We found ${data.hits.length} images, but you've reached the end of search results."`
+      );
       lightbox.refresh();
 
       return;
     }
     galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
-    Notiflix.Notify.success(
-      `Вух, это же следующие ${pixabay.per_page} картинок!`
-    );
+
+    Notiflix.Notify.info(`We found ${pixabay.per_page} images.`);
     lightbox.refresh();
     scrollDown();
   } catch (error) {
