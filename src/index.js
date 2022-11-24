@@ -1,0 +1,109 @@
+// Стили
+import './css/common.css';
+import './css/style.css';
+//Библиотеки
+import Notiflix from 'notiflix';
+
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+//Части кода
+import { Pixabay } from './js/fetch';
+
+import { refs } from './js/refs';
+const { inputSearchEl, searchFormEl, btnLoadMoreEl, galleryEl } = refs;
+
+import templates from './templates/cards.hbs';
+// ==============================================================
+searchFormEl.addEventListener('submit', onClickSubmit);
+btnLoadMoreEl.addEventListener('click', onClickLoadMore);
+
+const lightbox = new SimpleLightbox('.gallery a', {
+  captionDelay: 250,
+});
+
+const pixabay = new Pixabay();
+
+btnLoadMoreEl.classList.add('is-hidden');
+
+async function onClickSubmit(event) {
+  event.preventDefault();
+
+  btnLoadMoreEl.classList.add('is-hidden');
+
+  pixabay.searchInput = event.target.elements.searchQuery.value.trim();
+  pixabay.page = 1;
+
+  if (pixabay.searchInput === '') {
+    galleryEl.innerHTML = '';
+
+    Notiflix.Notify.failure('Введите что-то пожалуйста.');
+    return;
+  }
+
+  try {
+    const { data } = await pixabay.fetchPhotos();
+
+    if (data.hits.length === 0) {
+      galleryEl.innerHTML = '';
+
+      Notiflix.Notify.failure('По вашему запросу ничего не найдено :<');
+      return;
+    }
+
+    if (data.totalHits <= pixabay.per_page) {
+      galleryEl.innerHTML = templates(data.hits);
+
+      Notiflix.Notify.success(
+        `Смотрите какая красота! Вот ваши ${data.hits.length} картинок.`
+      );
+      lightbox.refresh();
+      return;
+    }
+
+    galleryEl.innerHTML = templates(data.hits);
+    btnLoadMoreEl.classList.remove('is-hidden');
+
+    Notiflix.Notify.success(`Уху, мы нашли ${data.totalHits} картинок! `);
+
+    lightbox.refresh();
+  } catch (error) {
+    console.log(error);
+  }
+}
+async function onClickLoadMore(event) {
+  pixabay.page += 1;
+
+  const { data } = await pixabay.fetchPhotos();
+
+  try {
+    if (pixabay.page === Math.ceil(data.totalHits / pixabay.per_page)) {
+      galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
+      btnLoadMoreEl.classList.add('is-hidden');
+
+      Notiflix.Notify.info(`Это последние ${data.hits.length} картинок :<`);
+
+      lightbox.refresh();
+
+      return;
+    }
+    galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
+    Notiflix.Notify.success(
+      `Вух, это же следующие ${pixabay.per_page} картинок!`
+    );
+    lightbox.refresh();
+    scrollDown();
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+function scrollDown() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
+
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+}
