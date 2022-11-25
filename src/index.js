@@ -23,8 +23,6 @@ const lightbox = new SimpleLightbox('.gallery a', {
 
 const pixabay = new Pixabay();
 
-btnLoadMoreEl.classList.add('is-hidden');
-
 async function onClickSubmit(event) {
   event.preventDefault();
 
@@ -50,44 +48,31 @@ async function onClickSubmit(event) {
       return;
     }
 
-    if (data.totalHits <= pixabay.per_page) {
-      galleryEl.innerHTML = templates(data.hits);
-
-      Notiflix.Notify.success(`Hooray! We found ${data.hits.length} images.`);
-      lightbox.refresh();
-      return;
+    if (data.totalHits > pixabay.per_page) {
+      btnLoadMoreEl.classList.remove('is-hidden');
     }
 
     galleryEl.innerHTML = templates(data.hits);
-    btnLoadMoreEl.classList.remove('is-hidden');
-
     Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-
     lightbox.refresh();
   } catch (error) {
     console.log(error);
   }
 }
-async function onClickLoadMore(event) {
+async function onClickLoadMore() {
   pixabay.page += 1;
 
-  const { data } = await pixabay.fetchPhotos();
-
   try {
+    const { data } = await pixabay.fetchPhotos();
+
     if (pixabay.page === Math.ceil(data.totalHits / pixabay.per_page)) {
-      galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
       btnLoadMoreEl.classList.add('is-hidden');
-
       Notiflix.Notify.info(
-        `We found ${data.hits.length} images, but you've reached the end of search results."`
+        "We're sorry, but you've reached the end of search results."
       );
-      lightbox.refresh();
-
-      return;
     }
-    galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
 
-    Notiflix.Notify.info(`We found ${pixabay.per_page} images.`);
+    galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
     lightbox.refresh();
     scrollDown();
   } catch (error) {
