@@ -51,43 +51,32 @@ async function onClickSubmit(event) {
     }
 
     if (data.totalHits <= pixabay.per_page) {
-      galleryEl.innerHTML = templates(data.hits);
-
-      Notiflix.Notify.success(`Hooray! We found ${data.hits.length} images.`);
-      lightbox.refresh();
-      return;
+       btnLoadMoreEl.classList.remove('is-hidden');
     }
+    
+  galleryEl.innerHTML = templates(data.hits);
+lightbox.refresh();
+      Notiflix.Notify.success(`Hooray! We found ${data.hits.length} images.`);
+    
 
-    galleryEl.innerHTML = templates(data.hits);
-    btnLoadMoreEl.classList.remove('is-hidden');
-
-    Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`);
-
-    lightbox.refresh();
   } catch (error) {
     console.log(error);
   }
 }
 async function onClickLoadMore(event) {
   pixabay.page += 1;
+  
+  if (pixabay.page === Math.ceil(data.totalHits / pixabay.per_page)) {
+     
+      btnLoadMoreEl.classList.add('is-hidden');  
+    }
 
-  const { data } = await pixabay.fetchPhotos();
+
 
   try {
-    if (pixabay.page === Math.ceil(data.totalHits / pixabay.per_page)) {
-      galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
-      btnLoadMoreEl.classList.add('is-hidden');
-
-      Notiflix.Notify.info(
-        `We found ${data.hits.length} images, but you've reached the end of search results."`
-      );
-      lightbox.refresh();
-
-      return;
-    }
+      const { data } = await pixabay.fetchPhotos();
     galleryEl.insertAdjacentHTML('beforeend', templates(data.hits));
 
-    Notiflix.Notify.info(`We found ${pixabay.per_page} images.`);
     lightbox.refresh();
     scrollDown();
   } catch (error) {
